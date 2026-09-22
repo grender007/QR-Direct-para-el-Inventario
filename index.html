@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Redirigiendo al equipo...</title>
+    <script>
+        async function redirigir() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const equipo = urlParams.get('equipo');
+
+            if (!equipo) {
+                document.getElementById('mensaje').innerText = "Error: No se especificó el código del equipo.";
+                return;
+            }
+
+            try {
+                // 1. Consultamos un archivo JSON remoto donde guardas tu IP actual (puede estar en el mismo GitHub)
+                // Usamos timestamp (?t=...) para evitar que el navegador guarde la IP vieja en caché
+                const response = await fetch('config-ip.json?t=' + new Date().getTime());
+                const data = await response.json();
+                const ipActual = data.ip_servidor; // Ej: "http://172.16.0.82:8000"
+
+                if (!ipActual) {
+                    throw new Error("IP no configurada");
+                }
+
+                // 2. Redirigimos al usuario directamente a la Ventana Item de tu laptop
+                const urlDestino = `${ipActual}/index.html?equipo=${equipo}`;
+                window.location.replace(urlDestino);
+
+            } catch (error) {
+                document.getElementById('mensaje').innerHTML = `
+                    <h2>No se pudo conectar con el servidor local.</h2>
+                    <p>Asegúrate de estar conectado al Wi-Fi de la clínica.</p>
+                    <p><small>Código de equipo: ${equipo}</small></p>
+                `;
+            }
+        }
+
+        window.onload = redirigir;
+    </script>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+    <h1 id="mensaje">Buscando servidor local de la clínica... 🔄</h1>
+</body>
+</html>
